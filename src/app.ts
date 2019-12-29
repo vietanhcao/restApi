@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import feedRoutes from './router/feed';
+import mongoose from "mongoose";
 
 const app = express();
 
@@ -17,4 +18,8 @@ app.use((req, res, next) => {
 });
 app.use('/feed', feedRoutes);
 
-app.listen(8080);
+mongoose.connect('mongodb+srv://vietanhcao1994:sao14111@cluster0-ardsb.mongodb.net/test?retryWrites=true&w=majority').then(result => {
+	app.listen(8080);
+}).catch(err => console.log(err))
+
+
