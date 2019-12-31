@@ -26,12 +26,19 @@ export const createPost: RequestHandler = async (req, res, next) => {
 			(error as any).statusCode = 422;
 			throw error;
 		}
+		if (!req.file) {
+			const error = new Error('No image provided.');
+			(error as any).statusCode = 422;
+			throw error;
+		}
+		const imageUrl = req.file.path;
+
 		const { title, content } = req.body;
 		// Create post in db
 		const post = new Post({
 			title,
 			content,
-			imageUrl: 'images/16174449_1120050004771102_6238590716381029991_n.jpg',
+			imageUrl,
 			creator: {
 				name: 'viet anh'
 			}

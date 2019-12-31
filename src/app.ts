@@ -3,14 +3,36 @@ import express, { ErrorRequestHandler } from 'express';
 import bodyParser from 'body-parser';
 import feedRoutes from './router/feed';
 import mongoose from 'mongoose';
+import multer from 'multer';
 
 const app = express();
+
+const fileStorage = multer.diskStorage({
+	destination: (req, file, cb) => {
+		cb(null, 'src/images');
+	},
+	filename: (req, file, cb) => {
+		cb(null, new Date().toISOString() + '-' + file.originalname);
+	}
+});
+const fileFilter = (red, file, cb) => {
+	if (file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg') {
+		cb(null, true);
+	} else {
+		cb(null, false);
+	}
+};
 
 // app.use(bodyParser.urlencoded())// x-www-form-urlencoded use form
 
 app.use(bodyParser.json()); // application/json
-
-app.use('/images', express.static(path.join(__dirname, 'images')));// __dirname =>> src
+app.use(
+	multer({
+		storage: fileStorage,
+		fileFilter
+	}).single('image')
+);
+app.use('/src/images', express.static(path.join(__dirname, 'images'))); // __dirname =>> src
 
 app.use((req, res, next) => {
 	//access CROS
