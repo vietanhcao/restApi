@@ -30,7 +30,7 @@ app.use(
 	multer({
 		storage: fileStorage,
 		fileFilter
-	}).single('image')
+	}).single('image')// single image <==>  formData.append('image', postData.image);
 );
 app.use('/src/images', express.static(path.join(__dirname, 'images'))); // __dirname =>> src
 
