@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import feedRoutes from './router/feed';
 import mongoose from 'mongoose';
 import multer from 'multer';
+import authRouter from './router/auth';
 
 const app = express();
 
@@ -42,12 +43,15 @@ app.use((req, res, next) => {
 	next();
 });
 app.use('/feed', feedRoutes);
+app.use('/auth', authRouter);
 
 app.use(((error, req, res, next) => {
 	console.log('TCL: error', error);
-	const { statusCode, message } = error;
+	const { statusCode, message , data } = error;
+
 	res.status(statusCode || 500).json({
-		message
+		message,
+		data
 	});
 }) as ErrorRequestHandler);
 
