@@ -7,10 +7,14 @@ import Post from '../model/post';
 
 export const getPosts: RequestHandler = async (req, res, next) => {
 	try {
-		const posts = await Post.find();
+		const currentPage = req.query.page || 1;
+		const perPage = 2;
+		const totalItems = await Post.find().countDocuments();
+		const posts = await Post.find().skip((currentPage - 1) * perPage).limit(perPage);
 
 		res.status(200).json({
 			posts,
+			totalItems,
 			message: 'Fetched posts successfully.'
 		});
 	} catch (error) {
@@ -109,6 +113,28 @@ export const updatePost: RequestHandler = async (req, res, next) => {
 		const result = await post.save();
 
 		res.status(200).json({ message: 'post updated', post: result });
+	} catch (error) {
+		if (!error.statusCode) {
+			error.statusCode = 500;
+		}
+		next(error);
+	}
+};
+
+export const deletePost: RequestHandler = async (req, res, next) => {
+	try {
+		const { postId } = req.params;
+		const post = await Post.findById(postId);
+		if (!post) {
+			const error = new Error('Could not find post.');
+			(error as any).statusCode = 404;
+			throw error;
+		}
+		//Check logged in user
+		clearImage((post as any).imageUrl);
+		await Post.findByIdAndRemove(postId);
+
+		res.status(200).json({ message: 'Delete post.' });
 	} catch (error) {
 		if (!error.statusCode) {
 			error.statusCode = 500;
