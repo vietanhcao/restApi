@@ -1,11 +1,12 @@
 import express from 'express';
 import { getPosts, createPost, getPost, updatePost, deletePost } from '../controllers/feed';
 import { body } from 'express-validator';
+import isAuth from '../middleware/is-auth';
 
 const router = express.Router();
 
 //get /feed/posts
-router.get('/posts', getPosts);
+router.get('/posts', isAuth, getPosts);
 //post /feed/post
 router.post(
 	'/post',
