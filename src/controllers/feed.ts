@@ -134,7 +134,7 @@ export const updatePost: RequestHandler = async (req, res, next) => {
 export const deletePost: RequestHandler = async (req, res, next) => {
 	try {
 		const { postId } = req.params;
-		const post:any = await Post.findById(postId);
+		const post: any = await Post.findById(postId);
 		if (!post) {
 			const error = new Error('Could not find post.');
 			(error as any).statusCode = 404;
@@ -145,6 +145,10 @@ export const deletePost: RequestHandler = async (req, res, next) => {
 			(error as any).statusCode = 403;
 			throw error;
 		}
+		//delete relations
+		const user: any = await User.findById((req as any).userId);
+		user.posts.pull(postId);//??
+		await user.save();
 		//Check logged in user
 		clearImage((post as any).imageUrl);
 		await Post.findByIdAndRemove(postId);
