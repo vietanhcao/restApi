@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import Post from '../model/post';
+import User from '../model/user';
 
 export const getPosts: RequestHandler = async (req, res, next) => {
 	try {
@@ -45,15 +46,19 @@ export const createPost: RequestHandler = async (req, res, next) => {
 			title,
 			content,
 			imageUrl,
-			creator: {
-				name: 'viet anh'
-			}
+			creator: (req as any).userId
 		});
-		const result = await post.save();
-
+		await post.save();
+		const user: any = await User.findById((req as any).userId);
+		user.posts.push(post);
+		const result = await user.save();
 		res.status(201).json({
 			message: 'Post created successfully!',
-			post: result
+			post: post,
+			creator: {
+				_id: result._id,
+				name: result.name
+			}
 		});
 	} catch (error) {
 		if (!error.statusCode) {
