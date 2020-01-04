@@ -5,6 +5,7 @@ import feedRoutes from './router/feed';
 import mongoose from 'mongoose';
 import multer from 'multer';
 import authRouter from './router/auth';
+import socket from 'socket.io';
 
 const app = express();
 
@@ -31,7 +32,7 @@ app.use(
 	multer({
 		storage: fileStorage,
 		fileFilter
-	}).single('image')// single image <==>  formData.append('image', postData.image);
+	}).single('image') // single image <==>  formData.append('image', postData.image);
 );
 app.use('/src/images', express.static(path.join(__dirname, 'images'))); // __dirname =>> src
 
@@ -47,7 +48,7 @@ app.use('/auth', authRouter);
 
 app.use(((error, req, res, next) => {
 	console.log('TCL: error', error);
-	const { statusCode, message , data } = error;
+	const { statusCode, message, data } = error;
 
 	res.status(statusCode || 500).json({
 		message,
@@ -58,6 +59,10 @@ app.use(((error, req, res, next) => {
 mongoose
 	.connect('mongodb+srv://vietanhcao1994:sao14111@cluster0-ardsb.mongodb.net/message?retryWrites=true&w=majority') //create db message
 	.then((result) => {
-		app.listen(8080);
+		const server = app.listen(8080);
+		const io = socket(server);
+		io.on('connection', (socket) => {
+			console.log('Client connected');
+		});
 	})
 	.catch((err) => console.log(err));
