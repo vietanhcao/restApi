@@ -103,18 +103,23 @@ export const updatePost: RequestHandler = async (req, res, next) => {
 			(error as any).statusCode = 422;
 			throw error;
 		}
-		const post = await Post.findById(postId);
+		const post: any = await Post.findById(postId);
 		if (!post) {
 			const error = new Error('Could not find post.');
 			(error as any).statusCode = 404;
 			throw error;
 		}
-		if (imageUrl !== (post as any).imageUrl) {
-			clearImage((post as any).imageUrl); //remove old file
+		if (post.creator.toString() !== (req as any).userId) {
+			const error = new Error('Not authorized!');
+			(error as any).statusCode = 403;
+			throw error;
 		}
-		(post as any).title = title;
-		(post as any).imageUrl = imageUrl;
-		(post as any).content = content;
+		if (imageUrl !== post.imageUrl) {
+			clearImage(post.imageUrl); //remove old file
+		}
+		post.title = title;
+		post.imageUrl = imageUrl;
+		post.content = content;
 		const result = await post.save();
 
 		res.status(200).json({ message: 'post updated', post: result });
@@ -129,10 +134,15 @@ export const updatePost: RequestHandler = async (req, res, next) => {
 export const deletePost: RequestHandler = async (req, res, next) => {
 	try {
 		const { postId } = req.params;
-		const post = await Post.findById(postId);
+		const post:any = await Post.findById(postId);
 		if (!post) {
 			const error = new Error('Could not find post.');
 			(error as any).statusCode = 404;
+			throw error;
+		}
+		if (post.creator.toString() !== (req as any).userId) {
+			const error = new Error('Not authorized!');
+			(error as any).statusCode = 403;
 			throw error;
 		}
 		//Check logged in user
