@@ -2,7 +2,7 @@ import path from 'path';
 import express, { ErrorRequestHandler } from 'express';
 import bodyParser from 'body-parser';
 import feedRoutes from './router/feed';
-import mongoose from 'mongoose';
+import mongoose, { model } from 'mongoose';
 import multer from 'multer';
 import authRouter from './router/auth';
 import socketModule from './socket';

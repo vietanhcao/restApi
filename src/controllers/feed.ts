@@ -2,16 +2,16 @@ import { RequestHandler } from 'express';
 import { validationResult } from 'express-validator';
 import fs from 'fs';
 import path from 'path';
-
 import Post from '../model/post';
 import User from '../model/user';
+import socketModule from '../socket';
 
 export const getPosts: RequestHandler = async (req, res, next) => {
 	try {
 		const currentPage = req.query.page || 1;
 		const perPage = 2;
 		const totalItems = await Post.find().countDocuments();
-		const posts = await Post.find().skip((currentPage - 1) * perPage).limit(perPage);
+		const posts = await Post.find().populate('creator').skip((currentPage - 1) * perPage).limit(perPage);
 
 		res.status(200).json({
 			posts,
@@ -42,7 +42,7 @@ export const createPost: RequestHandler = async (req, res, next) => {
 
 		const { title, content } = req.body;
 		// Create post in db
-		const post = new Post({
+		const post: any = new Post({
 			title,
 			content,
 			imageUrl,
@@ -52,6 +52,12 @@ export const createPost: RequestHandler = async (req, res, next) => {
 		const user: any = await User.findById((req as any).userId);
 		user.posts.push(post);
 		const result = await user.save();
+		//socket action
+		socketModule.getIo().emit('posts', {
+			action: 'create',
+			post: { ...post._doc, creator: { _id: (req as any).userId, name: user.name } }
+		});
+
 		res.status(201).json({
 			message: 'Post created successfully!',
 			post: post,
@@ -147,7 +153,7 @@ export const deletePost: RequestHandler = async (req, res, next) => {
 		}
 		//delete relations
 		const user: any = await User.findById((req as any).userId);
-		user.posts.pull(postId);//??
+		user.posts.pull(postId); //??
 		await user.save();
 		//Check logged in user
 		clearImage((post as any).imageUrl);
