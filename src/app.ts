@@ -5,7 +5,8 @@ import feedRoutes from './router/feed';
 import mongoose from 'mongoose';
 import multer from 'multer';
 import authRouter from './router/auth';
-import socket from 'socket.io';
+import socketModule from './socket';
+
 
 const app = express();
 
@@ -60,7 +61,7 @@ mongoose
 	.connect('mongodb+srv://vietanhcao1994:sao14111@cluster0-ardsb.mongodb.net/message?retryWrites=true&w=majority') //create db message
 	.then((result) => {
 		const server = app.listen(8080);
-		const io = socket(server);
+		const io = socketModule.init(server);
 		io.on('connection', (socket) => {
 			console.log('Client connected');
 		});
