@@ -11,7 +11,11 @@ export const getPosts: RequestHandler = async (req, res, next) => {
 		const currentPage = req.query.page || 1;
 		const perPage = 2;
 		const totalItems = await Post.find().countDocuments();
-		const posts = await Post.find().populate('creator').skip((currentPage - 1) * perPage).limit(perPage); // get data relation
+		const posts = await Post.find()
+			.populate('creator')
+			.sort({ createdAt: -1 }) //sort descending
+			.skip((currentPage - 1) * perPage)
+			.limit(perPage); // get data relation
 
 		res.status(200).json({
 			posts,
@@ -163,7 +167,10 @@ export const deletePost: RequestHandler = async (req, res, next) => {
 		//Check logged in user
 		clearImage((post as any).imageUrl);
 		await Post.findByIdAndRemove(postId);
-
+		socketModule.getIo().emit('posts', {
+			action: 'delete',
+			post: postId
+		});
 		res.status(200).json({ message: 'Delete post.' });
 	} catch (error) {
 		if (!error.statusCode) {
