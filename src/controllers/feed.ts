@@ -11,7 +11,7 @@ export const getPosts: RequestHandler = async (req, res, next) => {
 		const currentPage = req.query.page || 1;
 		const perPage = 2;
 		const totalItems = await Post.find().countDocuments();
-		const posts = await Post.find().populate('creator').skip((currentPage - 1) * perPage).limit(perPage);
+		const posts = await Post.find().populate('creator').skip((currentPage - 1) * perPage).limit(perPage); // get data relation
 
 		res.status(200).json({
 			posts,
@@ -47,7 +47,7 @@ export const createPost: RequestHandler = async (req, res, next) => {
 			content,
 			imageUrl,
 			creator: (req as any).userId
-		});
+		}); // new Post -> {... _doc}
 		await post.save();
 		const user: any = await User.findById((req as any).userId);
 		user.posts.push(post);
@@ -55,9 +55,11 @@ export const createPost: RequestHandler = async (req, res, next) => {
 		//socket action
 		socketModule.getIo().emit('posts', {
 			action: 'create',
-			post: { ...post._doc, creator: { _id: (req as any).userId, name: user.name } }
-		});
-
+			post: {
+				...post._doc, // destructor have _doc
+				creator: { _id: (req as any).userId, name: user.name }
+			}
+		}); //_doc get all data
 		res.status(201).json({
 			message: 'Post created successfully!',
 			post: post,
@@ -109,13 +111,13 @@ export const updatePost: RequestHandler = async (req, res, next) => {
 			(error as any).statusCode = 422;
 			throw error;
 		}
-		const post: any = await Post.findById(postId);
+		const post: any = await Post.findById(postId).populate('creator');
 		if (!post) {
 			const error = new Error('Could not find post.');
 			(error as any).statusCode = 404;
 			throw error;
 		}
-		if (post.creator.toString() !== (req as any).userId) {
+		if (post.creator._id.toString() !== (req as any).userId) {
 			const error = new Error('Not authorized!');
 			(error as any).statusCode = 403;
 			throw error;
@@ -127,7 +129,10 @@ export const updatePost: RequestHandler = async (req, res, next) => {
 		post.imageUrl = imageUrl;
 		post.content = content;
 		const result = await post.save();
-
+		socketModule.getIo().emit('posts', {
+			action: 'update',
+			post: result
+		});
 		res.status(200).json({ message: 'post updated', post: result });
 	} catch (error) {
 		if (!error.statusCode) {
