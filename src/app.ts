@@ -1,13 +1,11 @@
 import path from 'path';
 import express, { ErrorRequestHandler } from 'express';
 import bodyParser from 'body-parser';
-import feedRoutes from './router/feed';
 import mongoose, { model } from 'mongoose';
 import multer from 'multer';
-import authRouter from './router/auth';
-import socketModule from './socket';
-
-
+import graphqlHttp from 'express-graphql';
+import schema from './graphql/schema';
+import resolvers from './graphql/resolvers';
 const app = express();
 
 const fileStorage = multer.diskStorage({
@@ -44,8 +42,13 @@ app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 	next();
 });
-app.use('/feed', feedRoutes);
-app.use('/auth', authRouter);
+app.use(
+	'/graphql',
+	graphqlHttp({
+		schema: schema,
+		rootValue: resolvers
+	})
+);
 
 app.use(((error, req, res, next) => {
 	console.log('TCL: error', error);
@@ -60,10 +63,6 @@ app.use(((error, req, res, next) => {
 mongoose
 	.connect('mongodb+srv://vietanhcao1994:sao14111@cluster0-ardsb.mongodb.net/message?retryWrites=true&w=majority') //create db message
 	.then((result) => {
-		const server = app.listen(8080);
-		const io = socketModule.init(server);
-		io.on('connection', (socket) => {
-			console.log('Client connected');
-		});
+		app.listen(8080);
 	})
 	.catch((err) => console.log(err));
