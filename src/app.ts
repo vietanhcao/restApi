@@ -40,6 +40,9 @@ app.use((req, res, next) => {
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
 	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+	if (req.method === 'OPTIONS') {
+		return res.sendStatus(200);// fix error 405
+	}
 	next();
 });
 app.use(
@@ -47,17 +50,17 @@ app.use(
 	graphqlHttp({
 		schema: schema,
 		rootValue: resolvers,
-		graphiql:true,
-		customFormatErrorFn(err){
-			if (!err.originalError) { // err you create
-          console.log("TCL: formatError -> err.originalError", err.originalError)
-					return err
+		graphiql: true,
+		customFormatErrorFn(err) {
+			if (!err.originalError) {
+				// err you create
+				console.log('TCL: formatError -> err.originalError', err.originalError);
+				return err;
 			}
-			const {data} = (err.originalError as any);
+			const { data } = err.originalError as any;
 			const code = (err.originalError as any).code || 500;
 			const message = err.message || 'An error occurred';
-			return {message, status: code, data}
-
+			return { message, status: code, data };
 		}
 	})
 );
