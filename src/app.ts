@@ -6,6 +6,7 @@ import multer from 'multer';
 import graphqlHttp from 'express-graphql';
 import schema from './graphql/schema';
 import resolvers from './graphql/resolvers';
+import auth from './middleware/auth';
 const app = express();
 
 const fileStorage = multer.diskStorage({
@@ -45,6 +46,7 @@ app.use((req, res, next) => {
 	}
 	next();
 });
+app.use(auth)
 app.use(
 	'/graphql',
 	graphqlHttp({

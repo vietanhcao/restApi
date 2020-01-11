@@ -2,6 +2,7 @@ import User from '../model/user';
 import bcrypt from 'bcryptjs';
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
+import Post from '../model/post';
 
 export default {
 	createUser: async ({ userInput }, req) => {
@@ -30,6 +31,7 @@ export default {
 		return { ...createdUser._doc, _id: createdUser._id.toString() };
 	},
 	login: async ({ email, password }, req) => {
+		
 		const user: any = await User.findOne({ email });
 		if (!user) {
 			const error: any = new Error('User not found.');
@@ -47,9 +49,56 @@ export default {
 				userId: user._id.toString(),
 				email: user.email
 			},
-			'somesuppersecretsecret',
+			'somesupersecretsecret',
 			{ expiresIn: '1h' }
 		);
 		return { token, userId: user._id.toString() };
+	},
+	createPost: async ({ postInput }, req) => {
+		if (!req.isAuth) {
+			const error: any = new Error('Not authenticated!');
+			error.code = 401;
+			throw error;
+		}
+		const errors = [];
+		const { title, content, imageUrl } = postInput;
+		if (validator.isEmpty(title) || !validator.isLength(title, { min: 5 })) {
+			errors.push({ message: 'Title is invalid.' });
+		}
+		if (validator.isEmpty(content) || !validator.isLength(content, { min: 5 })) {
+			errors.push({ message: 'Content is invalid.' });
+		}
+		if (validator.isEmpty(imageUrl) || !validator.isLength(imageUrl, { min: 5 })) {
+			errors.push({ message: 'ImageUrl is invalid.' });
+		}
+		if (errors.length > 0) {
+			const error = new Error('Invalid input.');
+			(error as any).data = errors;
+			(error as any).code = 422;
+			throw error;
+		}
+		const user: any = await User.findById(req.userId);
+		if (!user) {
+			const error = new Error('Invalid user.');
+			(error as any).data = errors;
+			(error as any).code = 401;
+			throw error;
+		}
+		const post = new Post({
+			title,
+			content,
+			imageUrl,
+			creator: user
+		});
+		const createdPost: any = await post.save();
+		// Add post to user post
+		user.posts.push(createdPost)
+		await user.save()
+		return {
+			...createdPost._doc,
+			_id: createdPost._id.toString(),//graphql understand object
+			createdAt: createdPost.createdAt.toISOString(),
+			updatedAt: createdPost.updatedAt.toISOString()
+		};
 	}
 };

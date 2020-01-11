@@ -3,12 +3,12 @@ import { buildSchema } from 'graphql';
 export default buildSchema(`
   type Post {
     _id: ID!
-    tilte: String!
+    title: String!
     content: String!
     imageUrl: String!
     creator: User!
-    createAt: String!
-    updateAt: String!
+    createdAt: String!
+    updatedAt: String!
   }
 
   type User {
@@ -34,9 +34,15 @@ export default buildSchema(`
   type RootQuery {
     login(email:String!,password:String!): AuthData!
   }
+  input PostInputData {
+    title: String!
+    content: String!
+    imageUrl: String!
+  }
 
   type RootMutation {
     createUser(userInput: UserInputData): User!
+    createPost(postInput: PostInputData): Post!
   }
 
   schema {
