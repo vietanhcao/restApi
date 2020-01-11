@@ -47,7 +47,18 @@ app.use(
 	graphqlHttp({
 		schema: schema,
 		rootValue: resolvers,
-		graphiql:true
+		graphiql:true,
+		customFormatErrorFn(err){
+			if (!err.originalError) { // err you create
+          console.log("TCL: formatError -> err.originalError", err.originalError)
+					return err
+			}
+			const {data} = (err.originalError as any);
+			const code = (err.originalError as any).code || 500;
+			const message = err.message || 'An error occurred';
+			return {message, status: code, data}
+
+		}
 	})
 );
 
