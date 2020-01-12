@@ -31,7 +31,6 @@ export default {
 		return { ...createdUser._doc, _id: createdUser._id.toString() };
 	},
 	login: async ({ email, password }, req) => {
-		
 		const user: any = await User.findOne({ email });
 		if (!user) {
 			const error: any = new Error('User not found.');
@@ -92,13 +91,34 @@ export default {
 		});
 		const createdPost: any = await post.save();
 		// Add post to user post
-		user.posts.push(createdPost)
-		await user.save()
+		user.posts.push(createdPost);
+		await user.save();
 		return {
 			...createdPost._doc,
-			_id: createdPost._id.toString(),//graphql understand object
+			_id: createdPost._id.toString(), //graphql understand object
 			createdAt: createdPost.createdAt.toISOString(),
 			updatedAt: createdPost.updatedAt.toISOString()
+		};
+	},
+	posts: async (args, req) => {
+		if (!req.isAuth) {
+			const error: any = new Error('Not authenticated!');
+			error.code = 401;
+			throw error;
+		}
+		const totalPosts = await Post.find().countDocuments();
+		const posts = await Post.find().sort({ createdAt: -1 }).populate('creator');
+
+		return {
+			posts: posts.map((p: any) => {
+				return {
+					...p._doc,
+					_id: p._id.toString(),
+					createdAt: p.createdAt.toISOString(),
+					updatedAt: p.updatedAt.toISOString()
+				};
+			}),
+			totalPosts: totalPosts
 		};
 	}
 };
