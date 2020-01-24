@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
 import Post from '../model/post';
+import { clearImage } from '../util/file';
+
 
 export default {
 	createUser: async ({ userInput }, req) => {
@@ -197,5 +199,39 @@ export default {
 			createdAt: updatedPost.createdAt.toISOString(),
 			updatedAt: updatedPost.updatedAt.toISOString()
 		};
+	},
+	deletePost: async({id},req) => {
+		if (!req.isAuth) {
+			const error: any = new Error('Not authenticated!');
+			error.code = 401;
+			throw error;
+		}
+		const post:any =  await Post.findById(id);
+		if(!post){
+			const error: any = new Error('Cound not Found Post');
+			error.code = 404;
+			throw error;
+		}
+		if(post.creator.toString() !== req.userId.toString()){
+			const error: any = new Error('Not authenticated!');
+			error.code = 403;
+			throw error;
+		}
+		const user: any = await User.findById(req.userId);
+		if(!user){
+			const error: any = new Error('Cound not Found user');
+			error.code = 404;
+			throw error;
+		}
+		user.posts.pull(id);
+		await user.save();
+
+		clearImage(post.imageUrl)
+		await Post.findByIdAndRemove(id);
+
+		return true
+
+
 	}
 };
+

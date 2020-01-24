@@ -1,5 +1,4 @@
 import path from 'path';
-import fs from 'fs';
 import express, { ErrorRequestHandler } from 'express';
 import bodyParser from 'body-parser';
 import mongoose, { model } from 'mongoose';
@@ -8,6 +7,7 @@ import graphqlHttp from 'express-graphql';
 import schema from './graphql/schema';
 import resolvers from './graphql/resolvers';
 import auth from './middleware/auth';
+import { clearImage } from './util/file';
 const app = express();
 
 const fileStorage = multer.diskStorage({
@@ -97,8 +97,3 @@ mongoose
 		app.listen(8080);
 	})
 	.catch((err) => console.log(err));
-
-const clearImage = (filePath) => {
-	filePath = path.join(__dirname, '..', filePath); //go to root file
-	fs.unlink(filePath, (err) => console.log(err));
-};
