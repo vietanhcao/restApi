@@ -228,10 +228,46 @@ export default {
 
 		clearImage(post.imageUrl)
 		await Post.findByIdAndRemove(id);
-
 		return true
-
-
+	},
+	user: async(args, req) => {
+		if (!req.isAuth) {
+			const error: any = new Error('Not authenticated!');
+			error.code = 401;
+			throw error;
+		}
+		const user: any = await User.findById(req.userId);
+		if(!user){
+			const error: any = new Error('User not found!')
+			error.code = 404;
+			throw error;
+			
+		}
+		return {
+			...user._doc,
+			_id: user._id.toString(),
+		}
+	}
+	,
+	updateStatus: async ({status},req) => {
+		if (!req.isAuth) {
+			const error: any = new Error('Not authenticated!');
+			error.code = 401;
+			throw error;
+		}
+		const user: any = await User.findById(req.userId);
+		if(!user){
+			const error: any = new Error('User not found!')
+			error.code = 404;
+			throw error;
+			
+		}
+		user.status = status;
+		const userSaved = await user.save();
+		return {
+			...userSaved._doc,
+			_id: userSaved._id.toString(),
+		}
 	}
 };
 

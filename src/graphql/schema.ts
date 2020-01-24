@@ -40,6 +40,7 @@ export default buildSchema(`
     login(email:String!,password:String!): AuthData!
     posts(page: Int): PostData!
     post(ID: ID!): Post!
+    user: User!
   }
   input PostInputData {
     title: String!
@@ -52,6 +53,7 @@ export default buildSchema(`
     createPost(postInput: PostInputData): Post!
     updatePost(id: ID! , postInput: PostInputData): Post!
     deletePost(id: ID!) : Boolean
+    updateStatus(status: String!): User!
   }
 
   schema {
